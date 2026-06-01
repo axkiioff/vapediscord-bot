@@ -4,11 +4,10 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY lib/ ./lib/
+COPY package.json pnpm-workspace.yaml ./
 COPY artifacts/discord-bot/ ./artifacts/discord-bot/
 
-RUN pnpm install --frozen-lockfile --filter @workspace/discord-bot...
+RUN pnpm install --filter @workspace/discord-bot...
 
 WORKDIR /app/artifacts/discord-bot
 
