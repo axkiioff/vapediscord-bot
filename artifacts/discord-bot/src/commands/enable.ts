@@ -8,46 +8,35 @@ import {
 import { ensureGuild, setProtection } from "../lib/db.js";
 
 const FEATURES = [
-  "antilink",
-  "anti_create_channel",
-  "anti_delete_channel",
-  "anti_ban",
-  "anti_kick",
-  "anti_create_role",
-  "anti_delete_role",
+  { value: "antilink", name: "Anti-Link" },
+  { value: "anti_create_channel", name: "Anti Create Channel" },
+  { value: "anti_delete_channel", name: "Anti Delete Channel" },
+  { value: "anti_ban", name: "Anti Ban" },
+  { value: "anti_kick", name: "Anti Kick" },
+  { value: "anti_create_role", name: "Anti Create Role" },
+  { value: "anti_delete_role", name: "Anti Delete Role" },
 ];
 
-const FEATURE_LABELS: Record<string, string> = {
-  antilink: "Anti-Link",
-  anti_create_channel: "Anti Create Channel",
-  anti_delete_channel: "Anti Delete Channel",
-  anti_ban: "Anti Ban",
-  anti_kick: "Anti Kick",
-  anti_create_role: "Anti Create Role",
-  anti_delete_role: "Anti Delete Role",
-};
-
-const builder = new SlashCommandBuilder()
+export const data = new SlashCommandBuilder()
   .setName("enable")
   .setDescription("Enable a protection feature")
+  .addStringOption((opt) =>
+    opt
+      .setName("feature")
+      .setDescription("Which protection to enable")
+      .setRequired(true)
+      .addChoices(...FEATURES.map((f) => ({ name: f.name, value: f.value })))
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
-
-for (const feat of FEATURES) {
-  builder.addSubcommand((sub) =>
-    sub.setName(feat).setDescription(`Enable ${FEATURE_LABELS[feat]}`)
-  );
-}
-
-export const data = builder;
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   const guildId = interaction.guildId!;
   ensureGuild(guildId);
 
-  const feature = interaction.options.getSubcommand();
-  setProtection(guildId, feature, true);
+  const feature = interaction.options.getString("feature", true);
+  const label = FEATURES.find((f) => f.value === feature)?.name ?? feature;
 
-  const label = FEATURE_LABELS[feature] ?? feature;
+  setProtection(guildId, feature, true);
 
   const embed = new EmbedBuilder()
     .setColor(Colors.Green)
