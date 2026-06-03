@@ -12,20 +12,24 @@ import {
   trackAction,
   resetActionCount,
   ensureGuild,
+  getGuildSettings,
+  recordStaffMod,
+  ModStats,
 } from "../lib/db.js";
 import { sendStaffAlert } from "../lib/raid.js";
 
 const MUTE_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 async function muteUser(guild: Guild, userId: string, reason: string) {
-  const member = guild.members.cache.get(userId) ?? await guild.members.fetch(userId).catch(() => null);
+  const member =
+    guild.members.cache.get(userId) ??
+    (await guild.members.fetch(userId).catch(() => null));
   if (!member) return;
   if (member.isCommunicationDisabled()) return;
 
-  await member.disableCommunicationUntil(
-    Date.now() + MUTE_DURATION_MS,
-    reason
-  ).catch(() => null);
+  await member
+    .disableCommunicationUntil(Date.now() + MUTE_DURATION_MS, reason)
+    .catch(() => null);
 
   await sendStaffAlert(
     guild,
@@ -50,14 +54,37 @@ export async function execute(entry: GuildAuditLogsEntry, guild: Guild) {
   const executorId = entry.executorId;
   if (!executorId) return;
 
-  const executor = guild.members.cache.get(executorId) ?? await guild.members.fetch(executorId).catch(() => null);
+  const executor =
+    guild.members.cache.get(executorId) ??
+    (await guild.members.fetch(executorId).catch(() => null));
   if (!executor) return;
 
   if (executor.id === guild.client.user?.id) return;
 
   const action = entry.action;
+  const settings = getGuildSettings(guild.id);
+  const staffRoleId = settings.staff_role_id;
 
-  const mappings: { auditAction: AuditLogEvent; feature: string; rateLimitKey: string; alertTitle: string }[] = [
+  // Map audit actions to staff mod tracking
+  const modTypeMap: Partial<Record<AuditLogEvent, keyof ModStats>> = {
+    [AuditLogEvent.MemberBanAdd]: "B",
+    [AuditLogEvent.MemberKick]: "K",
+    [AuditLogEvent.MemberUpdate]: "M",
+  };
+
+  if (staffRoleId && executor.roles.cache.has(staffRoleId)) {
+    const modType = modTypeMap[action as AuditLogEvent];
+    if (modType) {
+      recordStaffMod(guild.id, executorId, modType);
+    }
+  }
+
+  const mappings: {
+    auditAction: AuditLogEvent;
+    feature: string;
+    rateLimitKey: string;
+    alertTitle: string;
+  }[] = [
     {
       auditAction: AuditLogEvent.ChannelCreate,
       feature: "anti_create_channel",
