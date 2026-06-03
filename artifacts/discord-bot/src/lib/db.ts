@@ -8,19 +8,33 @@ const dbPath = path.join(dataDir, "bot.json");
 
 fs.mkdirSync(dataDir, { recursive: true });
 
+export interface ModStats {
+  W: number;
+  M: number;
+  K: number;
+  B: number;
+  C: number;
+}
+
 interface DB {
   guilds: Record<string, GuildRecord>;
 }
 
 interface GuildRecord {
   staff_channel_id?: string;
+  report_channel_id?: string;
+  staff_role_id?: string;
   prefix?: string;
+  last_daily_report?: string;
+  last_monthly_report?: string;
   protections: Record<string, boolean>;
   blacklisted_words: string[];
   rate_limits: Record<string, { limit_count: number; limit_target: string }>;
   action_counts: Record<string, { count: number; window_start: number }>;
   user_permissions: Record<string, string[]>;
   role_permissions: Record<string, string[]>;
+  staff_messages: Record<string, Record<string, number>>;
+  staff_mods: Record<string, Record<string, ModStats>>;
 }
 
 function load(): DB {
@@ -45,9 +59,14 @@ function getGuild(db: DB, guildId: string): GuildRecord {
       action_counts: {},
       user_permissions: {},
       role_permissions: {},
+      staff_messages: {},
+      staff_mods: {},
     };
   }
-  return db.guilds[guildId];
+  const g = db.guilds[guildId];
+  if (!g.staff_messages) g.staff_messages = {};
+  if (!g.staff_mods) g.staff_mods = {};
+  return g;
 }
 
 export function ensureGuild(guildId: string) {
@@ -245,4 +264,145 @@ export function getAllRolePermissions(guildId: string) {
     }
   }
   return result;
+}
+
+// ─── Staff Tracking ───────────────────────────────────────────────────────────
+
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function monthKey(): string {
+  return new Date().toISOString().slice(0, 7);
+}
+
+export function recordStaffMessage(guildId: string, userId: string) {
+  const db = load();
+  const guild = getGuild(db, guildId);
+  const day = todayKey();
+  if (!guild.staff_messages[userId]) guild.staff_messages[userId] = {};
+  guild.staff_messages[userId][day] = (guild.staff_messages[userId][day] ?? 0) + 1;
+  save(db);
+}
+
+export function recordStaffMod(
+  guildId: string,
+  userId: string,
+  type: keyof ModStats
+) {
+  const db = load();
+  const guild = getGuild(db, guildId);
+  const day = todayKey();
+  if (!guild.staff_mods[userId]) guild.staff_mods[userId] = {};
+  if (!guild.staff_mods[userId][day])
+    guild.staff_mods[userId][day] = { W: 0, M: 0, K: 0, B: 0, C: 0 };
+  guild.staff_mods[userId][day][type]++;
+  save(db);
+}
+
+function sumMessages(data: Record<string, number>, prefix: string): number {
+  return Object.entries(data)
+    .filter(([k]) => k.startsWith(prefix))
+    .reduce((acc, [, v]) => acc + v, 0);
+}
+
+function sumMods(
+  data: Record<string, ModStats>,
+  prefix: string
+): ModStats {
+  const result: ModStats = { W: 0, M: 0, K: 0, B: 0, C: 0 };
+  for (const [k, v] of Object.entries(data)) {
+    if (k.startsWith(prefix)) {
+      result.W += v.W;
+      result.M += v.M;
+      result.K += v.K;
+      result.B += v.B;
+      result.C += v.C;
+    }
+  }
+  return result;
+}
+
+function calcScore(messages: number, mods: ModStats): number {
+  return (
+    messages * 10 +
+    mods.W * 2 +
+    mods.M * 3 +
+    mods.K * 3 +
+    mods.B * 5 +
+    mods.C * 1
+  );
+}
+
+export interface StaffEntry {
+  userId: string;
+  score: number;
+  messages: number;
+  mods: ModStats;
+}
+
+export function getDailyStaffStats(guildId: string): StaffEntry[] {
+  const db = load();
+  const guild = getGuild(db, guildId);
+  const day = todayKey();
+  const userIds = new Set([
+    ...Object.keys(guild.staff_messages),
+    ...Object.keys(guild.staff_mods),
+  ]);
+
+  const entries: StaffEntry[] = [];
+  for (const userId of userIds) {
+    const messages = guild.staff_messages[userId]?.[day] ?? 0;
+    const mods = guild.staff_mods[userId]?.[day]
+      ? sumMods(guild.staff_mods[userId], day)
+      : { W: 0, M: 0, K: 0, B: 0, C: 0 };
+    const score = calcScore(messages, mods);
+    if (score > 0) entries.push({ userId, score, messages, mods });
+  }
+
+  return entries.sort((a, b) => b.score - a.score);
+}
+
+export function getMonthlyStaffStats(guildId: string): StaffEntry[] {
+  const db = load();
+  const guild = getGuild(db, guildId);
+  const month = monthKey();
+  const userIds = new Set([
+    ...Object.keys(guild.staff_messages),
+    ...Object.keys(guild.staff_mods),
+  ]);
+
+  const entries: StaffEntry[] = [];
+  for (const userId of userIds) {
+    const messages = sumMessages(guild.staff_messages[userId] ?? {}, month);
+    const mods = sumMods(guild.staff_mods[userId] ?? {}, month);
+    const score = calcScore(messages, mods);
+    if (score > 0) entries.push({ userId, score, messages, mods });
+  }
+
+  return entries.sort((a, b) => b.score - a.score);
+}
+
+export function getLastDailyReport(guildId: string): string {
+  const db = load();
+  return getGuild(db, guildId).last_daily_report ?? "";
+}
+
+export function setLastDailyReport(guildId: string, date: string) {
+  const db = load();
+  const guild = getGuild(db, guildId);
+  guild.last_daily_report = date;
+  save(db);
+}
+
+export function getLastMonthlyReport(guildId: string): string {
+  const db = load();
+  return getGuild(db, guildId).last_monthly_report ?? "";
+}
+
+export function setLastMonthlyReport(guildId: string, month: string) {
+  const db = load();
+  const guild = getGuild(db, guildId);
+  guild.last_monthly_report = month;
+  save(db);
 }
