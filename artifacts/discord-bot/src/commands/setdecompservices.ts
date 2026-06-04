@@ -7,13 +7,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ChannelType,
-  AttachmentBuilder,
 } from "discord.js";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const BANNER_PATH = path.join(__dirname, "../../assets/ak-banner.png");
 
 export const data = new SlashCommandBuilder()
   .setName("setdecompservices")
@@ -40,13 +34,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     customDesc ??
     "Click the button below to place an order!\nOne of our experienced uncopylockers will address it.";
 
-  const banner = new AttachmentBuilder(BANNER_PATH, { name: "ak-banner.png" });
-
   const embed = new EmbedBuilder()
     .setColor(0xff8c00)
     .setTitle("Place an Order!")
     .setDescription(desc)
-    .setImage("attachment://ak-banner.png")
     .setFooter({ text: "AK Uncopylocked Services" });
 
   const button = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -62,7 +53,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return interaction.reply({ content: "Channel not found.", ephemeral: true });
   }
 
-  await targetChannel.send({ embeds: [embed], files: [banner], components: [button] });
+  await targetChannel.send({ embeds: [embed], components: [button] });
 
   await interaction.reply({
     content: `Order panel posted in <#${channel.id}>`,
