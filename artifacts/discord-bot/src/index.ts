@@ -48,7 +48,7 @@ for (const file of eventFiles) {
   const mod = await import(
     pathToFileURL(path.join(eventsDir, file)).href
   );
-  if (mod.once) {
+  if (mod.name === "clientReady" || mod.name === "ready" || mod.once) {
     client.once(mod.name, (...args: any[]) => mod.execute(...args));
   } else {
     client.on(mod.name, (...args: any[]) => mod.execute(...args));
@@ -61,7 +61,7 @@ if (!token) {
   process.exit(1);
 }
 
-client.once("ready", () => {
+client.once("clientReady", () => {
   startReportScheduler(client);
 });
 
