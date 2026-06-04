@@ -65,4 +65,13 @@ client.once("ready", () => {
   startReportScheduler(client);
 });
 
+const shutdown = () => {
+  console.log("Shutting down bot...");
+  client.destroy();
+  process.exit(0);
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
+
 await client.login(token);
