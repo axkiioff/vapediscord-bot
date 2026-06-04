@@ -27,6 +27,9 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  // Acknowledge Discord immediately — prevents it retrying and sending duplicates
+  await interaction.deferReply({ ephemeral: true });
+
   const channel = interaction.options.getChannel("channel", true);
   const customDesc = interaction.options.getString("description");
 
@@ -50,13 +53,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const targetChannel = interaction.guild!.channels.cache.get(channel.id) as any;
   if (!targetChannel) {
-    return interaction.reply({ content: "Channel not found.", ephemeral: true });
+    return interaction.editReply({ content: "Channel not found." });
   }
 
   await targetChannel.send({ embeds: [embed], components: [button] });
 
-  await interaction.reply({
+  await interaction.editReply({
     content: `Order panel posted in <#${channel.id}>`,
-    ephemeral: true,
   });
 }
