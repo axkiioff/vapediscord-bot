@@ -74,6 +74,9 @@ export async function execute(interaction: Interaction) {
     const staffRoleId = (settings as any).staff_role_id as string | undefined;
     const categoryId = (settings as any).ticket_category_id as string | undefined;
 
+    // These roles always have access to every ticket
+    const ALWAYS_ALLOWED_ROLES = ["1502750946688499712", "1505919764307116123"];
+
     const overwrites: any[] = [
       {
         id: guild.roles.everyone.id,
@@ -102,6 +105,21 @@ export async function execute(interaction: Interaction) {
           PermissionFlagsBits.ManageMessages,
         ],
       });
+    }
+
+    for (const roleId of ALWAYS_ALLOWED_ROLES) {
+      if (roleId !== staffRoleId && guild.roles.cache.has(roleId)) {
+        overwrites.push({
+          id: roleId,
+          type: OverwriteType.Role,
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.ReadMessageHistory,
+            PermissionFlagsBits.ManageMessages,
+          ],
+        });
+      }
     }
 
     let ticketChannel: TextChannel;
