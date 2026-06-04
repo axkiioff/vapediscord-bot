@@ -16,7 +16,14 @@ import { getGuildSettings } from "../lib/db.js";
 
 export const name = Events.InteractionCreate;
 
+// Dedup set — prevents the same interaction from being handled twice
+const handled = new Set<string>();
+
 export async function execute(interaction: Interaction) {
+  if (handled.has(interaction.id)) return;
+  handled.add(interaction.id);
+  setTimeout(() => handled.delete(interaction.id), 30_000);
+
   // ── Slash commands ──────────────────────────────────────────────
   if (interaction.isChatInputCommand()) {
     const client = interaction.client as any;
@@ -51,10 +58,11 @@ export async function execute(interaction: Interaction) {
     const settings = getGuildSettings(guild.id);
 
     // Check if user already has an open ticket
+    const safeUsername = user.username.toLowerCase().replace(/[^a-z0-9]/g, "");
     const existing = guild.channels.cache.find(
       (ch) =>
         ch.type === ChannelType.GuildText &&
-        ch.name === `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g, "")}`
+        ch.name === `ticket-${safeUsername}`
     );
 
     if (existing) {
@@ -63,7 +71,9 @@ export async function execute(interaction: Interaction) {
       });
     }
 
-    // Build permission overwrites
+    const staffRoleId = (settings as any).staff_role_id as string | undefined;
+    const categoryId = (settings as any).ticket_category_id as string | undefined;
+
     const overwrites: any[] = [
       {
         id: guild.roles.everyone.id,
@@ -81,8 +91,6 @@ export async function execute(interaction: Interaction) {
       },
     ];
 
-    // Add staff role if configured
-    const staffRoleId = settings.staff_role_id as string | undefined;
     if (staffRoleId) {
       overwrites.push({
         id: staffRoleId,
@@ -95,10 +103,6 @@ export async function execute(interaction: Interaction) {
         ],
       });
     }
-
-    // Category (optional)
-    const categoryId = (settings as any).ticket_category_id as string | undefined;
-    const safeUsername = user.username.toLowerCase().replace(/[^a-z0-9]/g, "");
 
     let ticketChannel: TextChannel;
     try {
@@ -116,7 +120,6 @@ export async function execute(interaction: Interaction) {
       });
     }
 
-    // Welcome embed inside the ticket
     const welcomeEmbed = new EmbedBuilder()
       .setColor(0xff8c00)
       .setTitle("🎫 Order Ticket")
@@ -139,13 +142,14 @@ export async function execute(interaction: Interaction) {
         .setStyle(ButtonStyle.Danger)
     );
 
+    // Ping @everyone so the whole server sees a ticket was opened
     await ticketChannel.send({
-      content: `<@${user.id}>${staffRoleId ? ` | <@&${staffRoleId}>` : ""}`,
+      content: `@everyone | <@${user.id}>${staffRoleId ? ` <@&${staffRoleId}>` : ""}`,
       embeds: [welcomeEmbed],
       components: [closeRow],
     });
 
-    // Log to ticket logs channel if set
+    // Log to ticket logs channel
     const logChannelId = (settings as any).ticket_logs_channel_id as string | undefined;
     if (logChannelId) {
       const logChannel = guild.channels.cache.get(logChannelId) as TextChannel | undefined;
@@ -173,14 +177,12 @@ export async function execute(interaction: Interaction) {
     const guild = interaction.guild!;
     const settings = getGuildSettings(guild.id);
 
-    // Confirm embed before deleting
     const confirmEmbed = new EmbedBuilder()
       .setColor(Colors.Red)
       .setDescription(`🔒 Ticket closed by <@${interaction.user.id}>. This channel will be deleted in 5 seconds.`);
 
     await interaction.reply({ embeds: [confirmEmbed] });
 
-    // Log closure
     const logChannelId = (settings as any).ticket_logs_channel_id as string | undefined;
     if (logChannelId) {
       const logChannel = guild.channels.cache.get(logChannelId) as TextChannel | undefined;
