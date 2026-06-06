@@ -36,9 +36,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   // ── Intro ──────────────────────────────────────────────────────
   const introEmbed = new EmbedBuilder()
     .setColor(ORANGE)
-    .setTitle("📜  AK UNCOPYLOCKED  |  SERVER RULES")
+    .setTitle("📜  ROBLOX SERVICE  |  SERVER RULES")
     .setDescription(
-      "Welcome to **AK Uncopylocked** — the trusted hub for Roblox development, open source assets, and uncopylocked resources.\n\n" +
+      "Welcome to **Roblox Service** — the trusted hub for Roblox development, open source assets, and uncopylocked resources.\n\n" +
       "By remaining in this server you agree to abide by the directives outlined below.\n" +
       "**Ignorance of these rules is not an excusable offense.**"
     );
@@ -159,10 +159,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           "Other languages are fine in DMs.",
       },
       {
-        name: "3.4  No Alt Accounts  🔴 BAN",
+        name: "3.4  Alt Accounts & Ban Evasion",
         value:
-          "Using alternate accounts to evade bans or punishments is strictly prohibited. " +
-          "All detected alt accounts will be banned and the original ban will be extended.",
+          "Alt accounts are allowed as long as they are not used to evade an active ban or punishment. " +
+          "**Ban evasion using an alt account will result in a permanent ban** on all accounts and the original ban being extended.",
       }
     );
 
@@ -220,7 +220,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       "By participating in this server you acknowledge and accept **all** rules listed above.\n" +
       "**If you have questions about the rules, open a ticket.**"
     )
-    .setFooter({ text: "AK Uncopylocked — Administration Team" })
+    .setFooter({ text: "Roblox Service — Administration Team" })
     .setTimestamp();
 
   await targetChannel.send({ embeds: [introEmbed] });
