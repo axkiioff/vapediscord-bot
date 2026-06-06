@@ -153,12 +153,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           "Repeated begging will result in a mute.",
       },
       {
-        name: "3.3  English Only (Public Channels)",
-        value:
-          "Please communicate in **English** in all public channels so staff can moderate effectively. " +
-          "Other languages are fine in DMs.",
-      },
-      {
         name: "3.4  Alt Accounts & Ban Evasion",
         value:
           "Alt accounts are allowed as long as they are not used to evade an active ban or punishment. " +
