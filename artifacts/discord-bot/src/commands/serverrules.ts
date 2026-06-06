@@ -21,6 +21,7 @@ export const data = new SlashCommandBuilder()
 const BLUE = 0x5865f2;
 const RED = 0xe74c3c;
 const ORANGE = 0xff8c00;
+const YELLOW = 0xf1c40f;
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ ephemeral: true });
@@ -32,17 +33,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return interaction.editReply({ content: "Channel not found." });
   }
 
-  // ── Intro ─────────────────────────────────────────────────────
+  // ── Intro ──────────────────────────────────────────────────────
   const introEmbed = new EmbedBuilder()
     .setColor(ORANGE)
     .setTitle("📜  AK UNCOPYLOCKED  |  SERVER RULES")
     .setDescription(
       "Welcome to **AK Uncopylocked** — the trusted hub for Roblox development, open source assets, and uncopylocked resources.\n\n" +
-      "By remaining in this server, you agree to abide by the directives outlined below.\n" +
+      "By remaining in this server you agree to abide by the directives outlined below.\n" +
       "**Ignorance of these rules is not an excusable offense.**"
     );
 
-  // ── Section I: Code of Conduct ────────────────────────────────
+  // ── Section I: Code of Conduct ─────────────────────────────────
   const section1 = new EmbedBuilder()
     .setColor(BLUE)
     .setTitle("⚖️  SECTION I: CODE OF CONDUCT")
@@ -51,95 +52,173 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         name: "1.1  Mutual Respect",
         value:
           "Do not engage in harassment, toxicity, cyberbullying, or targeted hate speech. " +
-          "Maintain a professional demeanor when interacting with developers and community members.",
+          "Maintain a professional demeanor when interacting with developers and community members. " +
+          "Racism, homophobia, and any form of discrimination are strictly forbidden.",
       },
       {
-        name: "1.2  Profile and Identity",
+        name: "1.2  Swearing & Language  🟡 WARN → MUTE → BAN",
+        value:
+          "Excessive swearing, slurs, or offensive language is **not allowed** in any public channel. " +
+          "Keep conversations clean and respectful. First offence = warn, repeated = mute, continued = ban.",
+      },
+      {
+        name: "1.3  Profile and Identity",
         value:
           "Your Discord status, nickname, avatar, and banner must remain **Safe For Work (SFW)**. " +
           "Explicit, offensive, or highly controversial profiles will result in an immediate kick/ban.",
       },
       {
-        name: "1.3  Drama and Politics",
+        name: "1.4  Drama and Politics",
         value:
           "Keep personal grievances, community drama, and political/religious debates out of public channels. " +
-          "Take personal conflicts to DMs.",
+          "Take personal conflicts to DMs. Starting drama will result in a mute or ban.",
       },
       {
-        name: "1.4  Staff Compliance",
+        name: "1.5  Staff Compliance",
         value:
           "Staff directives are final. Arguing with, mini-modding, or disrespecting the Administration team " +
           "will result in immediate escalation of punishments.",
+      },
+      {
+        name: "1.6  Threats & Doxxing  🔴 PERMANENT BAN",
+        value:
+          "Threatening other members, sharing personal information (doxxing), or attempting to harm anyone " +
+          "inside or outside this server will result in an **immediate permanent ban** and report to Discord.",
       }
     );
 
-  // ── Section II: Content Rules ─────────────────────────────────
+  // ── Section II: Content & Chat Rules ───────────────────────────
   const section2 = new EmbedBuilder()
     .setColor(BLUE)
-    .setTitle("🔞  SECTION II: CONTENT RULES")
+    .setTitle("💬  SECTION II: CONTENT & CHAT RULES")
     .addFields(
       {
-        name: "2.1  NSFW Content  🔴 PERMANENT BAN",
+        name: "2.1  Spam & Flooding  🟡 MUTE → BAN",
         value:
-          "Sending, sharing, or linking **any** NSFW, explicit, or sexually suggestive content is strictly prohibited " +
-          "and will result in an **immediate permanent ban** with no appeal.",
+          "Do **not** spam messages, copy-paste walls of text, flood channels with emojis, send repeated messages, " +
+          "or abuse reactions. This includes voice channel soundboarding. Offenders will be muted then banned.",
       },
       {
-        name: "2.2  Scam & Phishing Links  🔴 PERMANENT BAN",
+        name: "2.2  Mass Mentions",
         value:
-          "Distributing scam links, phishing URLs, malware, or fraudulent content of any kind will result in an " +
+          "Do not mass-ping members, roles, or use @everyone / @here without staff permission. " +
+          "Abuse of mentions will result in a mute.",
+      },
+      {
+        name: "2.3  NSFW Content  🔴 PERMANENT BAN",
+        value:
+          "Sending, sharing, or linking **any** NSFW, explicit, or sexually suggestive content anywhere in this server " +
+          "is strictly prohibited and will result in an **immediate permanent ban** with no appeal.",
+      },
+      {
+        name: "2.4  Scam & Phishing Links  🔴 PERMANENT BAN",
+        value:
+          "Distributing scam links, phishing URLs, malware, or fraudulent content of **any** kind will result in an " +
           "**immediate permanent ban** and will be reported to Discord Trust & Safety.",
       },
       {
-        name: "2.3  Spam & Flooding",
+        name: "2.5  Self-Promotion & Advertising",
         value:
-          "Do not spam messages, emojis, mentions, or attachments. Repeated offenses will result in a mute, then a ban.",
+          "Advertising Discord servers, social media, YouTube channels, or any services outside of designated " +
+          "promotion channels is not allowed. Unsolicited DM advertising will result in a ban.",
       },
       {
-        name: "2.4  Self-Promotion",
-        value:
-          "Advertising servers, social media, or services outside of designated promotion channels is not allowed. " +
-          "Unsolicited DM advertising will result in a ban.",
-      },
-      {
-        name: "2.5  Impersonation",
+        name: "2.6  Impersonation  🔴 BAN",
         value:
           "Impersonating staff members, content creators, or other members is forbidden and will result in an immediate ban.",
+      },
+      {
+        name: "2.7  Controversial & Sensitive Topics",
+        value:
+          "Avoid discussing highly controversial topics such as real-world violence, political extremism, or religion " +
+          "in public channels. This server is a development community — keep it on topic.",
       }
     );
 
-  // ── Section III: Services & Orders ───────────────────────────
+  // ── Section III: Channel Usage ──────────────────────────────────
   const section3 = new EmbedBuilder()
-    .setColor(BLUE)
-    .setTitle("🛒  SECTION III: SERVICES & ORDERS")
+    .setColor(YELLOW)
+    .setTitle("📂  SECTION III: CHANNEL USAGE")
     .addFields(
       {
-        name: "3.1  Order Conduct",
+        name: "3.1  Stay On Topic",
         value:
-          "Be respectful and clear when placing orders. Provide accurate information. " +
-          "Rushing, demanding, or being rude to staff may result in your order being cancelled.",
+          "Use each channel for its intended purpose. Off-topic conversations belong in general chat. " +
+          "Posting irrelevant content in dev/showcase channels will result in message deletion.",
       },
       {
-        name: "3.2  Chargebacks & Fraud  🔴 PERMANENT BAN",
+        name: "3.2  No Begging",
+        value:
+          "Do not beg for free services, Robux, game access, or assets. " +
+          "Repeated begging will result in a mute.",
+      },
+      {
+        name: "3.3  English Only (Public Channels)",
+        value:
+          "Please communicate in **English** in all public channels so staff can moderate effectively. " +
+          "Other languages are fine in DMs.",
+      },
+      {
+        name: "3.4  No Alt Accounts  🔴 BAN",
+        value:
+          "Using alternate accounts to evade bans or punishments is strictly prohibited. " +
+          "All detected alt accounts will be banned and the original ban will be extended.",
+      }
+    );
+
+  // ── Section IV: Services & Orders ──────────────────────────────
+  const section4 = new EmbedBuilder()
+    .setColor(ORANGE)
+    .setTitle("🛒  SECTION IV: SERVICES & ORDERS")
+    .addFields(
+      {
+        name: "4.1  Order Conduct",
+        value:
+          "Be respectful and clear when placing orders. Provide accurate information. " +
+          "Rushing, demanding, or being rude to staff may result in your order being cancelled with no refund.",
+      },
+      {
+        name: "4.2  Chargebacks & Fraud  🔴 PERMANENT BAN",
         value:
           "Filing false chargebacks or attempting to defraud our services will result in a **permanent ban** " +
           "and potential legal action.",
       },
       {
-        name: "3.3  No Stolen Assets",
+        name: "4.3  No Stolen Assets",
         value:
           "Do not request services for games or assets that you do not own or have no rights to. " +
           "We do not assist with unauthorized use of others' intellectual property.",
+      },
+      {
+        name: "4.4  No Leaking",
+        value:
+          "Do not leak, redistribute, or resell uncopylocked assets obtained through this server without explicit permission. " +
+          "Violations will result in a permanent ban.",
       }
     );
 
-  // ── Footer ────────────────────────────────────────────────────
+  // ── Punishment Ladder ───────────────────────────────────────────
+  const punishEmbed = new EmbedBuilder()
+    .setColor(RED)
+    .setTitle("🔨  PUNISHMENT GUIDELINES")
+    .setDescription("Staff will apply punishments based on severity and history. General ladder:")
+    .addFields(
+      { name: "1️⃣  Verbal Warning", value: "Minor first-time offences.", inline: true },
+      { name: "2️⃣  Official Warn", value: "Logged strike on your account.", inline: true },
+      { name: "3️⃣  Mute", value: "Temporary communication restriction.", inline: true },
+      { name: "4️⃣  Kick", value: "Removed from server, can rejoin.", inline: true },
+      { name: "5️⃣  Temp Ban", value: "Removed for a set period.", inline: true },
+      { name: "6️⃣  Permanent Ban", value: "No appeal for severe violations.", inline: true }
+    );
+
+  // ── Footer ──────────────────────────────────────────────────────
   const footerEmbed = new EmbedBuilder()
     .setColor(RED)
     .setDescription(
-      "⚠️ **Rules are subject to change without notice.** Staff reserve the right to take action at their discretion, " +
-      "even for behavior not explicitly listed above.\n\n" +
-      "By participating in this server, you acknowledge and accept all rules listed above."
+      "⚠️ **Rules are subject to change without notice.**\n" +
+      "Staff reserve the right to take action at their discretion, even for behaviour not explicitly listed above.\n\n" +
+      "By participating in this server you acknowledge and accept **all** rules listed above.\n" +
+      "**If you have questions about the rules, open a ticket.**"
     )
     .setFooter({ text: "AK Uncopylocked — Administration Team" })
     .setTimestamp();
@@ -148,7 +227,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await targetChannel.send({ embeds: [section1] });
   await targetChannel.send({ embeds: [section2] });
   await targetChannel.send({ embeds: [section3] });
+  await targetChannel.send({ embeds: [section4] });
+  await targetChannel.send({ embeds: [punishEmbed] });
   await targetChannel.send({ embeds: [footerEmbed] });
 
-  await interaction.editReply({ content: `Server rules posted in <#${channelOption.id}>` });
+  await interaction.editReply({ content: `Server rules posted in <#${channelOption.id}> ✅` });
 }
